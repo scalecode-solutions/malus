@@ -1,0 +1,24 @@
+[package]
+name = "malus"
+version = "0.1.0"
+edition = "2021"
+description = "Native Apple UI framework for Rust — SwiftUI-like API, zero Swift required"
+
+[features]
+default = ["appkit", "core-foundation"]
+appkit = ["core-foundation"]
+core-foundation = []
+metal = ["core-foundation"]
+core-graphics = ["core-foundation"]
+core-text = ["core-foundation", "core-graphics"]
+quartz-core = ["core-foundation"]
+full = ["appkit", "metal", "core-graphics", "core-text", "quartz-core"]
+
+[dependencies]
+objc-sys = "0.3"
+
+[dev-dependencies]
+
+[[example]]
+name = "hello"
+path = "examples/hello.rs"
