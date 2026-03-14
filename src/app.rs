@@ -14,6 +14,7 @@ pub struct Window {
 }
 
 pub struct App {
+    #[allow(dead_code)]
     title: String,
     windows: Vec<Window>,
 }
@@ -83,7 +84,7 @@ impl App {
     }
 }
 
-unsafe fn create_window(app: Id, win: &Window) {
+unsafe fn create_window(_app: Id, win: &Window) {
     let style_mask: NSUInteger = (1 << 0)  // titled
         | (1 << 1)  // closable
         | (1 << 2)  // miniaturizable

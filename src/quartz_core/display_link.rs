@@ -53,6 +53,61 @@ impl CADisplayLink {
         }
     }
 
+    /// Convenience: add to the main run loop's common modes.
+    ///
+    /// This is the correct approach for macOS when the display link is
+    /// installed before entering the `NSApplication` run loop.
+    pub fn add_to_main_run_loop(&self) {
+        unsafe {
+            let rl: Id = msg_send!(
+                cls!("NSRunLoop") as Id,
+                sel!("mainRunLoop"),
+                fn(Id, Sel) -> Id
+            );
+            // On macOS, NSRunLoopCommonModes = "kCFRunLoopCommonModes"
+            // But we need the actual CF constant, not a string with that name.
+            // Use extern to get the real symbol.
+            extern "C" {
+                static kCFRunLoopCommonModes: Id;
+            }
+            let mode = kCFRunLoopCommonModes;
+            self.add_to_run_loop(rl, mode);
+        }
+    }
+
+    /// Create a display link associated with a specific NSView's display.
+    ///
+    /// On macOS 14+, this is the preferred way to create a CADisplayLink —
+    /// it associates the link with the view's screen refresh rate.
+    ///
+    /// # Safety
+    /// `view` must be a valid NSView. `target` must respond to `selector`.
+    pub unsafe fn from_view(view: Id, target: Id, selector: Sel) -> Self {
+        let obj: Id = msg_send!(
+            view,
+            sel!("displayLinkWithTarget:selector:"),
+            fn(Id, Sel, Id, Sel) -> Id,
+            target,
+            selector
+        );
+        Self(retain(obj))
+    }
+
+    /// Create a display link associated with a specific NSWindow's display.
+    ///
+    /// # Safety
+    /// `window` must be a valid NSWindow. `target` must respond to `selector`.
+    pub unsafe fn from_window(window: Id, target: Id, selector: Sel) -> Self {
+        let obj: Id = msg_send!(
+            window,
+            sel!("displayLinkWithTarget:selector:"),
+            fn(Id, Sel, Id, Sel) -> Id,
+            target,
+            selector
+        );
+        Self(retain(obj))
+    }
+
     /// Remove this display link from all run loops and release resources.
     pub fn invalidate(&self) {
         unsafe {

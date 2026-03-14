@@ -49,7 +49,7 @@ impl View for TextField {
         );
 
         // Wire on_change via delegate
-        if let Some(cb) = &self.on_change {
+        if let Some(_cb) = &self.on_change {
             // We need to clone the callback into the event system.
             // Since we can't clone a Box<dyn Fn>, we'll use a trick:
             // wrap in Arc so the map owns it.
@@ -62,6 +62,7 @@ impl View for TextField {
 
 /// Separate builder that takes ownership of on_change to avoid borrow issues.
 impl TextField {
+    #[allow(dead_code)]
     pub(crate) unsafe fn build_owned(self) -> Id {
         let field = alloc_init(cls!("NSTextField") as Id);
 

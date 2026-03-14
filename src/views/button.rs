@@ -50,6 +50,7 @@ impl View for Button {
 }
 
 impl Button {
+    #[allow(dead_code)]
     pub(crate) unsafe fn build_owned(self) -> Id {
         let title_ns = nsstring(&self.label);
         let btn: Id = msg_send!(

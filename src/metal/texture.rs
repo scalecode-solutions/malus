@@ -166,7 +166,7 @@ impl MTLTexture {
     }
 
     #[inline]
-    pub(crate) unsafe fn from_raw(ptr: Id) -> Self {
+    pub unsafe fn from_raw(ptr: Id) -> Self {
         Self(ptr)
     }
 }

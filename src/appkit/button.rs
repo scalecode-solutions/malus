@@ -92,7 +92,6 @@ impl NSButton {
     pub fn new(title: &str) -> Self {
         unsafe {
             let ns = nsstring(title);
-            let null: Id = std::ptr::null_mut();
             let raw: Id = msg_send!(
                 cls!("NSButton") as Id,
                 sel!("buttonWithTitle:target:action:"),
@@ -109,7 +108,6 @@ impl NSButton {
     pub fn checkbox(title: &str) -> Self {
         unsafe {
             let ns = nsstring(title);
-            let null: Id = std::ptr::null_mut();
             let raw: Id = msg_send!(
                 cls!("NSButton") as Id,
                 sel!("checkboxWithTitle:target:action:"),
@@ -126,7 +124,6 @@ impl NSButton {
     pub fn radio(title: &str) -> Self {
         unsafe {
             let ns = nsstring(title);
-            let null: Id = std::ptr::null_mut();
             let raw: Id = msg_send!(
                 cls!("NSButton") as Id,
                 sel!("radioButtonWithTitle:target:action:"),

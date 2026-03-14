@@ -16,7 +16,6 @@ impl NSSlider {
     /// Create a slider with an initial value, min, and max.
     pub fn with_value(value: f64, min: f64, max: f64) -> Self {
         unsafe {
-            let null: Id = std::ptr::null_mut();
             let raw: Id = msg_send!(
                 cls!("NSSlider") as Id,
                 sel!("sliderWithValue:minValue:maxValue:target:action:"),

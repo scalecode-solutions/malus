@@ -13,6 +13,7 @@ pub type CGMutablePathRef = *mut __CGPath;
 extern "C" {
     fn CGPathCreateMutable() -> CGMutablePathRef;
     fn CGPathCreateCopy(path: CGPathRef) -> CGPathRef;
+    #[allow(dead_code)]
     fn CGPathCreateMutableCopy(path: CGPathRef) -> CGMutablePathRef;
 
     fn CGPathIsEmpty(path: CGPathRef) -> bool;

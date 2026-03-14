@@ -196,3 +196,76 @@ impl Drop for MTLRenderPipelineState {
 
 unsafe impl Send for MTLRenderPipelineState {}
 unsafe impl Sync for MTLRenderPipelineState {}
+
+// ============================================================================
+// MTLComputePipelineState
+// ============================================================================
+
+pub struct MTLComputePipelineState(Id);
+
+impl MTLComputePipelineState {
+    /// Create a compute pipeline state from a device and compute function.
+    pub fn new(
+        device: &MTLDevice,
+        function: &MTLFunction,
+    ) -> Result<Self, String> {
+        unsafe {
+            let mut error: Id = std::ptr::null_mut();
+            let raw: Id = msg_send!(
+                device.as_raw(),
+                sel!("newComputePipelineStateWithFunction:error:"),
+                fn(Id, Sel, Id, *mut Id) -> Id,
+                function.as_raw(),
+                &mut error as *mut Id
+            );
+            if raw.is_null() {
+                let desc: Id = msg_send!(error, sel!("localizedDescription"), fn(Id, Sel) -> Id);
+                Err(from_nsstring(desc))
+            } else {
+                Ok(Self(raw))
+            }
+        }
+    }
+
+    /// Maximum total threads per threadgroup.
+    pub fn max_total_threads_per_threadgroup(&self) -> usize {
+        unsafe {
+            msg_send!(self.0, sel!("maxTotalThreadsPerThreadgroup"), fn(Id, Sel) -> NSUInteger)
+        }
+    }
+
+    /// Thread execution width.
+    pub fn thread_execution_width(&self) -> usize {
+        unsafe {
+            msg_send!(self.0, sel!("threadExecutionWidth"), fn(Id, Sel) -> NSUInteger)
+        }
+    }
+
+    /// Get the label.
+    pub fn label(&self) -> String {
+        unsafe {
+            let ns_str: Id = msg_send!(self.0, sel!("label"), fn(Id, Sel) -> Id);
+            from_nsstring(ns_str)
+        }
+    }
+
+    #[inline]
+    pub fn as_raw(&self) -> Id {
+        self.0
+    }
+}
+
+impl Clone for MTLComputePipelineState {
+    fn clone(&self) -> Self {
+        Self(unsafe { retain(self.0) })
+    }
+}
+
+impl Drop for MTLComputePipelineState {
+    fn drop(&mut self) {
+        unsafe { release(self.0) }
+    }
+}
+
+unsafe impl Send for MTLComputePipelineState {}
+unsafe impl Sync for MTLComputePipelineState {}

@@ -17,6 +17,7 @@ pub struct CATransform3D {
 
 extern "C" {
     fn CATransform3DIsIdentity(t: CATransform3D) -> bool;
+    #[allow(dead_code)]
     fn CATransform3DEqualToTransform(a: CATransform3D, b: CATransform3D) -> bool;
     fn CATransform3DInvert(t: CATransform3D) -> CATransform3D;
     fn CATransform3DConcat(a: CATransform3D, b: CATransform3D) -> CATransform3D;

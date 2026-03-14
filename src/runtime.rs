@@ -4,7 +4,7 @@
 //! Everything here is internal — users never see it.
 
 pub use objc_sys::*;
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::os::raw::c_char;
 
 // ============================================================================
@@ -12,6 +12,7 @@ use std::os::raw::c_char;
 // ============================================================================
 
 pub type Sel = SEL;
+#[allow(dead_code)]
 pub type Class = *const objc_class;
 pub type Id = *mut objc_object;
 
@@ -30,6 +31,7 @@ macro_rules! sel {
         }
     }};
 }
+#[allow(unused_imports)]
 pub(crate) use sel;
 
 /// Fetch an ObjC class by name.
@@ -43,6 +45,7 @@ macro_rules! cls {
         }
     }};
 }
+#[allow(unused_imports)]
 pub(crate) use cls;
 
 /// Send an ObjC message — caller provides the C function signature via turbofish.
@@ -60,6 +63,7 @@ macro_rules! msg_send {
         f($obj, $sel, $($arg),+)
     }};
 }
+#[allow(unused_imports)]
 pub(crate) use msg_send;
 
 // ============================================================================
@@ -109,12 +113,22 @@ pub fn from_bool(b: bool) -> BOOL {
 // ============================================================================
 
 /// Create an autoreleased `NSString` from a Rust string.
+///
+/// Uses `initWithBytes:length:encoding:` instead of `stringWithUTF8String:`
+/// because Rust `&str` is NOT null-terminated. Using `stringWithUTF8String:`
+/// would read past the string boundary into adjacent memory.
 pub unsafe fn nsstring(s: &str) -> Id {
     let cls = cls!("NSString");
-    let bytes = s.as_ptr() as *const c_char;
-    let len = s.len();
-    let sel = sel!("stringWithUTF8String:");
-    msg_send!(cls as Id, sel, fn(Id, Sel, *const c_char) -> Id, bytes)
+    let alloc: Id = msg_send!(cls as Id, sel!("alloc"), fn(Id, Sel) -> Id);
+    let utf8_encoding: NSUInteger = 4; // NSUTF8StringEncoding
+    msg_send!(
+        alloc,
+        sel!("initWithBytes:length:encoding:"),
+        fn(Id, Sel, *const c_char, NSUInteger, NSUInteger) -> Id,
+        s.as_ptr() as *const c_char,
+        s.len() as NSUInteger,
+        utf8_encoding
+    )
 }
 
 /// Read an `NSString` into a Rust `String`. Returns empty string on null.
@@ -208,6 +222,7 @@ pub type NSInteger = isize;
 // Dynamic class creation (for trampoline targets/delegates)
 // ============================================================================
 
+#[allow(dead_code)]
 pub unsafe fn create_class(
     name: &str,
     superclass_name: &str,
@@ -221,10 +236,12 @@ pub unsafe fn create_class(
     cls
 }
 
+#[allow(dead_code)]
 pub unsafe fn register_class(cls: *mut objc_class) {
     objc_registerClassPair(cls);
 }
 
+#[allow(dead_code)]
 pub unsafe fn add_method(
     cls: *mut objc_class,
     sel: Sel,
@@ -233,4 +250,110 @@ pub unsafe fn add_method(
 ) {
     let types_c = CString::new(types).unwrap();
     class_addMethod(cls, sel, Some(imp), types_c.as_ptr());
+}
+
+// ============================================================================
+// Associated objects
+// ============================================================================
+
+/// Association policy for `set_associated_object`.
+#[repr(usize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
+pub enum AssociationPolicy {
+    /// Weak reference (OBJC_ASSOCIATION_ASSIGN).
+    Assign = 0,
+    /// Strong reference, non-atomic (OBJC_ASSOCIATION_RETAIN_NONATOMIC).
+    RetainNonatomic = 1,
+    /// Copy, non-atomic (OBJC_ASSOCIATION_COPY_NONATOMIC).
+    CopyNonatomic = 3,
+    /// Strong reference, atomic (OBJC_ASSOCIATION_RETAIN).
+    Retain = 0x301,
+    /// Copy, atomic (OBJC_ASSOCIATION_COPY).
+    Copy = 0x303,
+}
+
+extern "C" {
+    fn objc_setAssociatedObject(
+        object: Id,
+        key: *const c_void,
+        value: Id,
+        policy: usize,
+    );
+    fn objc_getAssociatedObject(
+        object: Id,
+        key: *const c_void,
+    ) -> Id;
+    fn objc_removeAssociatedObjects(object: Id);
+}
+
+/// Set an associated object on an ObjC object.
+#[allow(dead_code)]
+pub unsafe fn set_associated_object(
+    object: Id,
+    key: *const c_void,
+    value: Id,
+    policy: AssociationPolicy,
+) {
+    objc_setAssociatedObject(object, key, value, policy as usize);
+}
+
+/// Get an associated object from an ObjC object.
+#[allow(dead_code)]
+pub unsafe fn get_associated_object(object: Id, key: *const c_void) -> Id {
+    objc_getAssociatedObject(object, key)
+}
+
+/// Remove all associated objects from an ObjC object.
+#[allow(dead_code)]
+pub unsafe fn remove_associated_objects(object: Id) {
+    objc_removeAssociatedObjects(object);
+}
+
+// ============================================================================
+// Instance variable helpers
+// ============================================================================
+
+extern "C" {
+    fn class_addIvar(
+        cls: *mut objc_class,
+        name: *const c_char,
+        size: usize,
+        alignment: u8,
+        types: *const c_char,
+    ) -> BOOL;
+    fn object_getInstanceVariable(
+        obj: Id,
+        name: *const c_char,
+        out_value: *mut *mut c_void,
+    ) -> Id;
+    fn object_setInstanceVariable(
+        obj: Id,
+        name: *const c_char,
+        value: *mut c_void,
+    ) -> Id;
+}
+
+/// Add an ivar to a class (before registration).
+#[allow(dead_code)]
+pub unsafe fn add_ivar(cls: *mut objc_class, name: &str, size: usize, alignment: u8) {
+    let name_c = CString::new(name).unwrap();
+    let types_c = CString::new("^v").unwrap(); // void pointer
+    class_addIvar(cls, name_c.as_ptr(), size, alignment, types_c.as_ptr());
+}
+
+/// Get a pointer-sized ivar value from an object.
+#[allow(dead_code)]
+pub unsafe fn get_ivar(obj: Id, name: &str) -> *mut c_void {
+    let name_c = CString::new(name).unwrap();
+    let mut value: *mut c_void = std::ptr::null_mut();
+    object_getInstanceVariable(obj, name_c.as_ptr(), &mut value);
+    value
+}
+
+/// Set a pointer-sized ivar value on an object.
+#[allow(dead_code)]
+pub unsafe fn set_ivar(obj: Id, name: &str, value: *mut c_void) {
+    let name_c = CString::new(name).unwrap();
+    object_setInstanceVariable(obj, name_c.as_ptr(), value);
 }

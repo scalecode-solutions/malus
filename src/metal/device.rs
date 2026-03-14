@@ -6,6 +6,7 @@ use std::ffi::c_void;
 use super::buffer::MTLBuffer;
 use super::command_queue::MTLCommandQueue;
 use super::library::MTLLibrary;
+use super::texture::{MTLTexture, MTLTextureDescriptor};
 use super::types::{MTLGPUFamily, MTLResourceOptions};
 
 extern "C" {
@@ -102,6 +103,20 @@ impl MTLDevice {
             );
             assert!(!raw.is_null(), "newBufferWithLength returned null");
             MTLBuffer::from_raw(raw)
+        }
+    }
+
+    /// Create a texture from a descriptor.
+    pub fn new_texture(&self, descriptor: &MTLTextureDescriptor) -> MTLTexture {
+        unsafe {
+            let raw: Id = msg_send!(
+                self.0,
+                sel!("newTextureWithDescriptor:"),
+                fn(Id, Sel, Id) -> Id,
+                descriptor.as_raw()
+            );
+            assert!(!raw.is_null(), "newTextureWithDescriptor returned null");
+            MTLTexture::from_raw(raw)
         }
     }
 

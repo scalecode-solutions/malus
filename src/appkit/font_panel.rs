@@ -22,7 +22,6 @@ impl NSFontPanel {
 
     pub fn order_front(&self) {
         unsafe {
-            let null: Id = std::ptr::null_mut();
             msg_send!(
                 self.0,
                 sel!("makeKeyAndOrderFront:"),

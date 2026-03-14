@@ -19,7 +19,7 @@ pub use device::MTLDevice;
 pub use command_queue::MTLCommandQueue;
 pub use command_buffer::MTLCommandBuffer;
 pub use encoder::{MTLRenderCommandEncoder, MTLComputeCommandEncoder, MTLBlitCommandEncoder};
-pub use pipeline::{MTLRenderPipelineDescriptor, MTLRenderPipelineState};
+pub use pipeline::{MTLRenderPipelineDescriptor, MTLRenderPipelineState, MTLComputePipelineState};
 pub use library::{MTLLibrary, MTLFunction};
 pub use buffer::MTLBuffer;
 pub use texture::{MTLTexture, MTLTextureDescriptor};

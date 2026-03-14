@@ -21,6 +21,9 @@
 // Internal modules
 #[macro_use]
 pub(crate) mod runtime;
+// Many items in events are used only at runtime via the ObjC trampoline class
+// and appear unused to the compiler's static analysis.
+#[allow(dead_code)]
 pub(crate) mod events;
 pub(crate) mod reconciler;
 

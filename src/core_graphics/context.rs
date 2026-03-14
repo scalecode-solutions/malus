@@ -3,7 +3,7 @@
 use super::color::{CGColor, CGColorRef};
 use super::color_space::CGColorSpaceRef;
 use super::geometry::*;
-use super::image::{CGBitmapInfo, CGImage, CGImageRef, __CGImage};
+use super::image::{CGBitmapInfo, CGImage, CGImageRef};
 use crate::core_foundation::base::{CFRef, CFTypeRef};
 use std::ffi::c_void;
 use std::fmt;
