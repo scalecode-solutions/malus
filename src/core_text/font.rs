@@ -52,6 +52,14 @@ extern "C" {
         context: CGContextRef,
     );
 
+    fn CTFontGetAdvancesForGlyphs(
+        font: CTFontRef,
+        orientation: u32, // CTFontOrientation
+        glyphs: *const CGGlyph,
+        advances: *mut CGSize,
+        count: CFIndex,
+    ) -> f64;
+
     fn CTFontCopyFontDescriptor(font: CTFontRef) -> CTFontDescriptorRef;
     fn CTFontCopyDisplayName(font: CTFontRef) -> CFStringRef;
     fn CTFontCopyFullName(font: CTFontRef) -> CFStringRef;
@@ -148,6 +156,22 @@ impl CTFont {
                 glyphs.len(),
                 context.as_raw(),
             );
+        }
+    }
+
+    /// Get the advance width for a single glyph (horizontal orientation).
+    pub fn advance_for_glyph(&self, glyph: CGGlyph) -> CGFloat {
+        unsafe {
+            let glyphs = [glyph];
+            let mut advances = [CGSize { width: 0.0, height: 0.0 }];
+            CTFontGetAdvancesForGlyphs(
+                self.as_raw(),
+                0, // kCTFontOrientationHorizontal
+                glyphs.as_ptr(),
+                advances.as_mut_ptr(),
+                1,
+            );
+            advances[0].width
         }
     }
 
