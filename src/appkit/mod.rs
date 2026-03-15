@@ -54,6 +54,10 @@ pub mod box_;
 pub mod visual_effect;
 pub mod layout;
 
+// Controllers
+pub mod view_controller;
+pub mod split_view_controller;
+
 // Chrome
 pub mod menu;
 pub mod toolbar;
@@ -115,3 +119,5 @@ pub use workspace::NSWorkspace;
 pub use user_defaults::NSUserDefaults;
 pub use notification::NSNotificationCenter;
 pub use animation::NSAnimationContext;
+pub use view_controller::NSViewController;
+pub use split_view_controller::{NSSplitViewController, NSSplitViewItem, NSSplitViewItemBehavior};
